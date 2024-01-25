@@ -1,5 +1,10 @@
 node_modules
-test_task_api.log
 public/images
 uploads
 package-lock.json
+log
+npm-debug.log
+.git
+.vscode-test
+.vscode
+.idea

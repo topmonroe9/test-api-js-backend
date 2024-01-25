@@ -1,75 +1,91 @@
-const cron = require('node-cron');
-const cors = require('cors');
-const express = require('express');
-const fs = require('fs');
-const httpContext = require('express-http-context');
-const { marked } = require('marked');
-
-const config = require('./config.json');
-const logger = require('./services/logger')(module);
-
-const authRouter = require('./routes/auth.routes');
-const companiesRouter = require('./routes/companies.routes');
-const contactsRouter = require('./routes/contacts.routes');
+/* eslint-disable consistent-return */
+const express = require("express");
+require("express-async-errors");
+const httpContext = require("express-http-context");
+const cors = require("cors");
+const swaggerUI = require("swagger-ui-express");
+const useragent = require("express-useragent");
+const cron = require("node-cron");
+const fs = require("fs");
+const config = require("./config");
+const logger = require("./services/logger.service")(module);
+const { errorsHandler } = require("./middleware/error-handler.middleware");
+const { OK } = require("./constants/http-codes");
 
 const app = express();
 
+app.set("json replacer", (k, v) => (v === null ? undefined : v));
+app.disable("x-powered-by");
+app.enable("trust proxy");
+
+app.use(useragent.express());
+
+// http context
 app.use(httpContext.middleware);
 app.use((req, res, next) => {
+  const proto =
+    req.headers["x-forwarded-proto"] || req.socket.encrypted ? "https" : "http";
+  const url = `${proto}://${req.get("Host")}`;
   httpContext.ns.bindEmitter(req);
   httpContext.ns.bindEmitter(res);
-  httpContext.set('method', req?.method);
-  httpContext.set('url', req?.url);
+  httpContext.set("method", req?.method);
+  httpContext.set("path", req?.url);
+  httpContext.set("url", url);
   next();
 });
 
-app.use(cors());
+if (config.env.dev) {
+  // swagger
+  const { swaggerOptions } = require("./config/swagger");
+  const swaggerRoute = `/${config.prefix}/docs`;
+  app.use(swaggerRoute, swaggerUI.serve, swaggerUI.setup(swaggerOptions));
+
+  app.get(`/${config.prefix}/swagger.json`, (_, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.status(OK).json(swaggerOptions);
+  });
+
+  logger.info(`For swagger doc visit: ${config.url}${swaggerRoute}`);
+}
+
+// log every request
+app.use((req, res, next) => {
+  logger.debug();
+  next();
+});
+
+// cors
+app.use(cors(config.cors));
+
+// body parsing
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+app.use("/static", express.static("public"));
 
 app.use(express.json());
 
-app.use(express.static(`${__dirname}/public`));
+// routes
+app.use(`/${config.prefix}/`, require("./routes"));
 
-app.use('/auth', authRouter);
-app.use('/companies', companiesRouter);
-app.use('/contacts', contactsRouter);
+// error handling
+app.use(...errorsHandler);
 
-app.get('/', (req, res) => {
-  const path = `${__dirname}/README.md`;
-  const file = fs.readFileSync(path, 'utf8');
-  const pageContent = marked(file.toString());
-
-  res.send(
-    `
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="github-markdown.css">
-      </head>
-      <body>
-        <article class="markdown-body">${pageContent}</article>
-      </body>
-    </html>
-    `,
-  );
-});
-
-cron.schedule('0 * * * *', () => {
-  fs.rm('./public/images/', { recursive: true, force: true }, (err) => {
-    if (err) logger(err);
-  });
-});
-
-async function start() {
-  try {
-    app.listen(config.port, () => {
-      logger.info(`App has been started on port ${config.port}...`);
+if (!config.env.test) {
+  cron.schedule("*/2 * * * *", () => {
+    logger.init("schedule task - clear uploaded images");
+    fs.rm("./public/images/", { recursive: true, force: true }, (err) => {
+      if (err) {
+        logger.error(err);
+      }
+      logger.success();
     });
-  } catch (error) {
-    logger.error(error.message);
-    process.exit(1);
-  }
+  });
 }
 
-start();
-
-module.exports = app;
+module.exports = {
+  app,
+};
