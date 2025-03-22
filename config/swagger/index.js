@@ -32,6 +32,14 @@ const tags = [
     name: "Users",
     description: "Users management",
   },
+  {
+    name: "Companies",
+    description: "Companies management",
+  },
+  {
+    name: "Contacts",
+    description: "Contacts management",
+  },
 ];
 
 const security = [{ bearerAuth: [] }];
@@ -55,6 +63,8 @@ const swaggerOptions = {
   paths: {
     ...require("../../routes/readme/readme.docs"),
     ...require("../../routes/users/users.docs"),
+    ...require("../../routes/companies/companies.docs"),
+    ...require("../../routes/contacts/contacts.docs"),
   },
 };
 

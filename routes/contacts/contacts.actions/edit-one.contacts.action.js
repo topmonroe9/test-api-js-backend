@@ -1,7 +1,6 @@
 const logger = require("../../../services/logger.service")(module);
 const { OK } = require("../../../constants/http-codes");
 const contactMethods = require("../../../DB/sample-db/methods/contact");
-const { NotFound } = require("../../../constants/errors");
 
 /**
  * PATCH /contacts/:id
@@ -15,17 +14,14 @@ async function editOne(req, res) {
   const { id } = req.params;
   const data = req.body;
 
-  const contact = contactMethods.getOne(id);
-  if (!contact) {
-    throw new NotFound("Contact not found");
-  }
+  await contactMethods.getOne(id);
 
-  const updated = contactMethods.editOne(id, data);
+  const updated = await contactMethods.editOne(id, data);
 
-  res.status(OK).json(updated);
+  const responseData = updated.toObject ? updated.toObject() : updated;
+
+  res.status(OK).json(responseData);
   logger.success();
 }
 
-module.exports = {
-  editOne,
-};
+module.exports = { editOne };

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const dbsConfig = require("../config").dbs;
 const logger = require("./logger.service")(module);
 
@@ -6,11 +7,8 @@ const logger = require("./logger.service")(module);
  */
 class Database {
   #uri;
-
   #id;
-
   #database;
-
   #connection;
 
   constructor(config) {
@@ -25,10 +23,15 @@ class Database {
    */
   async connect() {
     try {
-      // todo: метод установки соединения с БД
+      this.#connection = await mongoose.createConnection(this.#uri, {
+        dbName: this.#database,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
       logger.info(`Connected to ${this.#id}`);
     } catch (error) {
       logger.error(`Unable to connect to ${this.#id}:`, error.message);
+      throw error;
     }
   }
 
@@ -39,10 +42,11 @@ class Database {
   async disconnect() {
     if (this.#connection) {
       try {
-        // todo: метод закрытия соединения с БД
+        await this.#connection.close();
         logger.info(`Disconnected from ${this.#id}`);
       } catch (error) {
         logger.error(`Unable to disconnect from ${this.#id}:`, error.message);
+        throw error;
       }
     }
   }

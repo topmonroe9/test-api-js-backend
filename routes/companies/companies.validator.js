@@ -1,20 +1,71 @@
 const path = require("path");
-const { body, check } = require("express-validator");
+const { body, check, query } = require("express-validator");
 const { UnprocessableEntity } = require("../../constants/errors");
 const validate = require("../../middleware/validation.middleware");
 const logger = require("../../services/logger.service")(module);
 const imageService = require("../../services/image.service");
 
 const getOne = [
-  check("id").isNumeric().withMessage({
+  check("id").isMongoId().withMessage({
     code: UnprocessableEntity,
     message: "id: parameter has incorrect format",
   }),
   validate,
 ];
 
+const getMany = [
+  query("status").optional().isString().withMessage({
+    code: UnprocessableEntity,
+    message: "status: parameter has incorrect format",
+  }),
+  query("type").optional().isArray().withMessage({
+    code: UnprocessableEntity,
+    message: "type: parameter has incorrect format",
+  }),
+  query("sort_by").optional().isIn(["name", "createdAt"]).withMessage({
+    code: UnprocessableEntity,
+    message: "sort_by: parameter has incorrect value",
+  }),
+  query("sort_order").optional().isIn(["asc", "desc"]).withMessage({
+    code: UnprocessableEntity,
+    message: "sort_order: parameter has incorrect value",
+  }),
+  query("page").optional().isInt({ min: 1 }).withMessage({
+    code: UnprocessableEntity,
+    message: "page: parameter has incorrect value",
+  }),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage({
+    code: UnprocessableEntity,
+    message: "limit: parameter has incorrect value",
+  }),
+  validate,
+];
+
 const editOne = [
-  check("id").isNumeric().withMessage({
+  check("id").isMongoId().withMessage({
+    code: UnprocessableEntity,
+    message: "id: parameter has incorrect format",
+  }),
+  validate,
+];
+const createOne = [
+  check("name").notEmpty().withMessage({
+    code: UnprocessableEntity,
+    message: "name: parameter is required",
+  }),
+  check("status").notEmpty().withMessage({
+    code: UnprocessableEntity,
+    message: "status: parameter is required",
+  }),
+  check("type").isArray().withMessage({
+    code: UnprocessableEntity,
+    message: "type: parameter must be an array",
+  }),
+  validate,
+];
+
+const deleteOne = [
+  check("id").isMongoId().withMessage({
     code: UnprocessableEntity,
     message: "id: parameter has incorrect format",
   }),
@@ -22,7 +73,7 @@ const editOne = [
 ];
 
 const addImage = [
-  check("id").isNumeric().withMessage({
+  check("id").isMongoId().withMessage({
     code: UnprocessableEntity,
     message: "id: parameter has incorrect format",
   }),
@@ -56,7 +107,7 @@ const addImage = [
 ];
 
 const removeImage = [
-  check("id").isNumeric().withMessage({
+  check("id").isMongoId().withMessage({
     code: UnprocessableEntity,
     message: "id: parameter has incorrect format",
   }),
@@ -69,4 +120,12 @@ const removeImage = [
   validate,
 ];
 
-module.exports = { getOne, editOne, addImage, removeImage };
+module.exports = {
+  getOne,
+  getMany,
+  editOne,
+  addImage,
+  removeImage,
+  createOne,
+  deleteOne,
+};

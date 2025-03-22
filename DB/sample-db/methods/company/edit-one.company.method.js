@@ -1,3 +1,4 @@
+const connection = require("../../index");
 const { getOne } = require("./get-one.company.method");
 
 /**
@@ -5,18 +6,13 @@ const { getOne } = require("./get-one.company.method");
  * и возвращает результат.
  * @param {string} id
  * @param {Object} data
- * @return {Object}
+ * @return {Promise<Object>}
  */
-function editOne(id, data) {
-  const mock = getOne(id);
+async function editOne(id, data) {
+  const { Company } = connection().models;
+  await getOne(id);
 
-  const updated = { ...mock };
-  Object.keys(data).forEach((key) => {
-    updated[`${key}`] = data[`${key}`];
-  });
-  updated.updatedAt = new Date();
-
-  return updated;
+  return Company.findByIdAndUpdate(id, data, { new: true });
 }
 
 module.exports = { editOne };

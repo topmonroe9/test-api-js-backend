@@ -7,6 +7,7 @@ const config = require("../../config");
 const fileHandler = multer({ dest: config.images.uploadsDir });
 
 module.exports = Router()
+  .get("/companies", ...validator.getMany, actions.getMany)
   .get("/companies/:id", ...validator.getOne, actions.getOne)
   .patch("/companies/:id", ...validator.editOne, actions.editOne)
   .post(

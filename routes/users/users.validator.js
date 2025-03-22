@@ -18,4 +18,41 @@ const getAuth = [
   validate,
 ];
 
-module.exports = { getAuth };
+const login = [
+  check("username")
+    .notEmpty()
+    .withMessage({
+      code: UnprocessableEntity,
+      message: "username: parameter is required"
+    }),
+  check("password")
+    .notEmpty()
+    .withMessage({
+      code: UnprocessableEntity,
+      message: "password: parameter is required"
+    }),
+  validate,
+];
+
+const register = [
+  check("username")
+    .notEmpty()
+    .withMessage({
+      code: UnprocessableEntity,
+      message: "username: parameter is required"
+    }),
+  check("password")
+    .notEmpty()
+    .withMessage({
+      code: UnprocessableEntity,
+      message: "password: parameter is required"
+    })
+    .isLength({ min: 6 })
+    .withMessage({
+      code: UnprocessableEntity,
+      message: "password: must be at least 6 characters long"
+    }),
+  validate,
+];
+
+module.exports = { getAuth, login, register };

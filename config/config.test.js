@@ -3,7 +3,9 @@ const config = require("./config.global");
 config.log.console = true;
 config.log.debug = true;
 
-config.sample_db = "mongodb://user:password@db_host/db_name";
+// MongoDB configuration for testing
+config.dbs.sample_db.uri = "mongodb://localhost:27017";
+config.dbs.sample_db.database = "company-api-test";
 
 config.jwt.secretKey = "jwt-test-secretKey";
 config.jwt.verify.maxAge = 604800;
