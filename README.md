@@ -63,7 +63,7 @@ This project implements a RESTful API that provides a CRUD interface for managin
 
    ```bash
    # Restore from the single-file MongoDB archive dump
-   mongorestore --drop --archive=./db-dump/company-api.archive
+   mongorestore --drop --archive=./DB/db-dump/company-api.archive
 
    # Or run the initialization script (alternative)
    mongosh mongodb://localhost:27017/company-api db-dump/init-db.js
@@ -276,15 +276,3 @@ The Swagger UI provides details of all endpoints, their parameters, and response
 ├── services                       # Services
 └── tests                          # Tests
 ```
-
-## Future Improvements
-
-- Add role-based access control
-- Implement refresh tokens for authentication
-- Add more comprehensive validation
-- Add cache layer for frequently accessed data
-- Implement full-text search
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
